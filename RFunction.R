@@ -433,7 +433,7 @@ plot_rasters <- function(rast_list, move_data, scale, track_id_var) {
   }
 
 
-  ncol <- ifelse(length(plot_list) < 4, length(plot_list), 2)
+  ncol <- ifelse(length(plot_list) < 4, length(plot_list), 4)
   nrow <- ceiling(length(plot_list) / ncol)
   plots_arranged <- ggpubr::ggarrange(
     plotlist = plot_list,
@@ -474,7 +474,9 @@ plot_rasters <- function(rast_list, move_data, scale, track_id_var) {
   width <- 6 * ncol
 
   ggsave(paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"), "raster_plot.jpeg"),
-    height = height, width = width, units = "in"
+  plot = final_arrangement,
+  height = height, width = width, units = "in",
+  limitsize = FALSE
   )
 
 
@@ -611,29 +613,31 @@ plot_used_background_densities <- function(model_data, model_variables,
     plots[[var]] <- p
   }
 
-  # Combine all plots
+# Combine all plots in a grid
+  n_plots <- length(plots)
+  plot_ncol <- ifelse(n_plots < 4, n_plots, 4)
+  plot_nrow <- ceiling(n_plots / plot_ncol)
+
   combined_plot <- ggarrange(
     plotlist = plots,
-    ncol = 1,
-    nrow = length(plots),
-    heights = rep(1, length(plots)),
+    ncol = plot_ncol,
+    nrow = plot_nrow,
     common.legend = TRUE,
     legend = "bottom",
-    align = "v",
-    vjust = 1
+    align = "hv"
   )
 
-
-  height <- 6 * length(model_variables)
-  width <- 5 + 2 * ifelse(
+  panel_width <- 5 + 2 * ifelse(
     scale == INDIVIDUAL, length(unique(model_data[[track_id_var]])), 0
   )
+  width <- panel_width * plot_ncol
+  height <- 5 * plot_nrow
 
   ggsave(paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"), "used_background_densities_plot.jpeg"),
     plot = combined_plot,
-    width = width, height = height, units = "in"
+    width = width, height = height, units = "in",
+    limitsize = FALSE
   )
-
 
   return(combined_plot)
 }
